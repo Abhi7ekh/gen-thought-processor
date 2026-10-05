@@ -29,6 +29,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
+    submissionInFlight.current = true;
     setError("");
     setMessage("");
     setIsGoogleSubmitting(true);
@@ -43,15 +44,16 @@ export function AuthForm({ mode }: AuthFormProps) {
       });
 
       if (error) {
-        setError(getAuthErrorMessage(error, "Unable to continue with Google right now."));
+        setError(getAuthErrorMessage(error, "Google sign-in is unavailable right now."));
       }
     } catch (googleError) {
       setError(
         googleError instanceof Error
-          ? getAuthErrorMessage(googleError, "Unable to continue with Google right now.")
-          : "Unable to continue with Google right now."
+          ? getAuthErrorMessage(googleError, "Google sign-in is unavailable right now.")
+          : "Google sign-in is unavailable right now."
       );
     } finally {
+      submissionInFlight.current = false;
       setIsGoogleSubmitting(false);
     }
   }
@@ -194,7 +196,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           id="email"
           name="email"
           type="email"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isGoogleSubmitting}
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
@@ -211,7 +213,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           id="password"
           name="password"
           type="password"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isGoogleSubmitting}
           autoComplete={isLogin ? "current-password" : "new-password"}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -229,7 +231,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             id="confirmPassword"
             name="confirmPassword"
             type="password"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isGoogleSubmitting}
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
@@ -253,7 +255,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || isGoogleSubmitting}
         className="inline-flex w-full items-center justify-center rounded-xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSubmitting
