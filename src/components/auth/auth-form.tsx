@@ -3,50 +3,31 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { emailSchema, loginSchema, signUpSchema } from "@/lib/validations/auth";
 
 type AuthFormProps = {
   mode: "login" | "signup";
 };
-
-const rateLimitMessage = "Too many attempts. Please wait a few minutes and try again.";
-
-function isRateLimitError(error: unknown) {
-  if (typeof error !== "object" || error === null) {
-    return false;
-  }
-
-  const authError = error as {
-    code?: unknown;
-    message?: unknown;
-    status?: unknown;
-  };
-  const details = [authError.code, authError.message]
-    .filter((value): value is string => typeof value === "string")
-    .join(" ")
-    .toLowerCase()
-    .replaceAll("_", " ");
-
-  return (
-    authError.status === 429 ||
-    details.includes("rate limit") ||
-    details.includes("too many")
-  );
-}
 
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const submissionInFlight = useRef(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
   async function handleResendConfirmation() {
-    if (!email.trim()) {
-      setError("Enter your email address before requesting a new confirmation email.");
+    const trimmedEmail = email.trim();
+    const parsedEmail = emailSchema.safeParse(trimmedEmail);
+
+    if (!parsedEmail.success) {
+      setError(parsedEmail.error.issues[0]?.message ?? "Enter a valid email address.");
       return;
     }
 
@@ -58,11 +39,11 @@ export function AuthForm({ mode }: AuthFormProps) {
       const supabase = createBrowserSupabaseClient();
       const { error: resendError } = await supabase.auth.resend({
         type: "signup",
-        email: email.trim(),
+        email: parsedEmail.data,
       });
 
       if (resendError) {
-        setError(resendError.message);
+        setError(getAuthErrorMessage(resendError, "Unable to resend the confirmation email."));
         return;
       }
 
@@ -70,7 +51,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     } catch (resendFailure) {
       setError(
         resendFailure instanceof Error
-          ? resendFailure.message
+          ? getAuthErrorMessage(resendFailure, "Unable to resend the confirmation email.")
           : "Unable to resend the confirmation email."
       );
     } finally {
@@ -90,30 +71,28 @@ export function AuthForm({ mode }: AuthFormProps) {
       setError("");
       setMessage("");
 
-      if (!email.trim() || !password) {
-        setError("Please enter both your email and password.");
-        return;
-      }
-
-      setIsSubmitting(true);
-      const supabase = createBrowserSupabaseClient();
+      const trimmedEmail = email.trim();
 
       if (mode === "login") {
+        const parsed = loginSchema.safeParse({ email: trimmedEmail, password });
+
+        if (!parsed.success) {
+          const fieldErrors = parsed.error.flatten().fieldErrors;
+          setError(
+            fieldErrors.email?.[0] ?? fieldErrors.password?.[0] ?? "Please correct the form and try again."
+          );
+          return;
+        }
+
+        setIsSubmitting(true);
+        const supabase = createBrowserSupabaseClient();
         const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
+          email: parsed.data.email,
+          password: parsed.data.password,
         });
 
         if (signInError) {
-          if (isRateLimitError(signInError)) {
-            setError(rateLimitMessage);
-          } else if (signInError.message.toLowerCase().includes("email not confirmed")) {
-            setError(
-              "Your email address has not been confirmed yet. Check your inbox and resend the confirmation email if needed."
-            );
-          } else {
-            setError(signInError.message);
-          }
+          setError(getAuthErrorMessage(signInError));
           return;
         }
 
@@ -122,27 +101,44 @@ export function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
+      const parsed = signUpSchema.safeParse({
+        email: trimmedEmail,
         password,
+        confirmPassword,
+      });
+
+      if (!parsed.success) {
+        const fieldErrors = parsed.error.flatten().fieldErrors;
+        setError(
+          fieldErrors.email?.[0] ??
+            fieldErrors.password?.[0] ??
+            fieldErrors.confirmPassword?.[0] ??
+            "Please correct the form and try again."
+        );
+        return;
+      }
+
+      setIsSubmitting(true);
+      const supabase = createBrowserSupabaseClient();
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: parsed.data.email,
+        password: parsed.data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/")}`,
         },
       });
 
       if (signUpError) {
-        setError(isRateLimitError(signUpError) ? rateLimitMessage : signUpError.message);
+        setError(getAuthErrorMessage(signUpError, "Something went wrong. Please try again."));
         return;
       }
 
-      setMessage("Account created. Check your email to confirm sign-in.");
+      router.push(`/verify-email?email=${encodeURIComponent(parsed.data.email)}`);
     } catch (submitError) {
       setError(
-        isRateLimitError(submitError)
-          ? rateLimitMessage
-          : submitError instanceof Error
-            ? submitError.message
-            : "An unexpected error occurred."
+        submitError instanceof Error
+          ? getAuthErrorMessage(submitError, "Something went wrong. Please try again.")
+          : "Something went wrong. Please try again."
       );
     } finally {
       submissionInFlight.current = false;
@@ -151,6 +147,8 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   const isLogin = mode === "login";
+  const shouldShowResendPrompt =
+    isLogin && error.toLowerCase().includes("verify your email") && !isSubmitting;
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-5">
@@ -183,10 +181,29 @@ export function AuthForm({ mode }: AuthFormProps) {
           autoComplete={isLogin ? "current-password" : "new-password"}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="Enter your password"
+          placeholder={isLogin ? "Enter your password" : "Create a strong password"}
           className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-base text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200"
         />
       </div>
+
+      {!isLogin ? (
+        <div className="space-y-2">
+          <label htmlFor="confirmPassword" className="text-sm font-medium text-zinc-700">
+            Confirm password
+          </label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            disabled={isSubmitting}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            placeholder="Re-enter your password"
+            className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-base text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200"
+          />
+        </div>
+      ) : null}
 
       {error ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -214,7 +231,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             : "Create account"}
       </button>
 
-      {isLogin && error.toLowerCase().includes("email not confirmed") ? (
+      {shouldShowResendPrompt ? (
         <button
           type="button"
           onClick={handleResendConfirmation}

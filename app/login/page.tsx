@@ -25,12 +25,19 @@ export default async function LoginPage() {
 
         <AuthForm mode="login" />
 
-        <p className="mt-6 text-center text-sm text-zinc-600">
-          Need an account?{" "}
-          <Link href="/signup" className="font-medium text-zinc-900 underline-offset-4 hover:underline">
-            Create one
-          </Link>
-        </p>
+        <div className="mt-6 space-y-2 text-center text-sm text-zinc-600">
+          <p>
+            <Link href="/forgot-password" className="font-medium text-zinc-900 underline-offset-4 hover:underline">
+              Forgot your password?
+            </Link>
+          </p>
+          <p>
+            Need an account?{" "}
+            <Link href="/signup" className="font-medium text-zinc-900 underline-offset-4 hover:underline">
+              Create one
+            </Link>
+          </p>
+        </div>
       </div>
     </main>
   );
