@@ -1,5 +1,6 @@
 "use client";
 
+import { Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -20,7 +21,40 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
+
+  async function handleGoogleSignIn() {
+    if (submissionInFlight.current || isGoogleSubmitting) {
+      return;
+    }
+
+    setError("");
+    setMessage("");
+    setIsGoogleSubmitting(true);
+
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/")}`,
+        },
+      });
+
+      if (error) {
+        setError(getAuthErrorMessage(error, "Unable to continue with Google right now."));
+      }
+    } catch (googleError) {
+      setError(
+        googleError instanceof Error
+          ? getAuthErrorMessage(googleError, "Unable to continue with Google right now.")
+          : "Unable to continue with Google right now."
+      );
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  }
 
   async function handleResendConfirmation() {
     const trimmedEmail = email.trim();
@@ -229,6 +263,23 @@ export function AuthForm({ mode }: AuthFormProps) {
           : isLogin
             ? "Sign in"
             : "Create account"}
+      </button>
+
+      <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
+        <div className="h-px flex-1 bg-zinc-200" />
+        <span>Or</span>
+        <div className="h-px flex-1 bg-zinc-200" />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleGoogleSignIn}
+        disabled={isSubmitting || isGoogleSubmitting}
+        aria-label="Continue with Google"
+        className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:focus-visible:ring-zinc-700"
+      >
+        <Globe className="h-4 w-4" aria-hidden="true" />
+        <span>{isGoogleSubmitting ? "Continuing with Google..." : "Continue with Google"}</span>
       </button>
 
       {shouldShowResendPrompt ? (
