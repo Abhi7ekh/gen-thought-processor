@@ -2,10 +2,12 @@ import { redirect } from "next/navigation";
 
 import { DashboardOverview } from "@/features/thoughts/dashboard-overview";
 import { getThoughtReadErrorMessage } from "@/features/thoughts/thought-query";
-import type { DashboardThought } from "@/features/thoughts/thought-types";
+import type { DashboardThoughtPreview } from "@/features/thoughts/thought-types";
 import { requireUserSession } from "@/lib/auth";
 import { getProfileIdentity } from "@/lib/profile";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+const dashboardThoughtPageSize = 30;
 
 const thoughtQueryKeys = [
   "search",
@@ -15,6 +17,7 @@ const thoughtQueryKeys = [
   "systemRating",
   "sort",
   "view",
+  "page",
 ];
 
 export default async function HomePage({
@@ -33,23 +36,29 @@ export default async function HomePage({
   const serializedQuery = legacyQuery.toString();
   if (serializedQuery) redirect(`/thoughts?${serializedQuery}`);
 
-  let thoughts: Pick<DashboardThought, "created_at" | "status" | "priority">[] | null = null;
+  let recentThoughts: DashboardThoughtPreview[] | null = null;
+  let hasMore = false;
   let loadError: string | undefined;
 
   try {
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from("thoughts")
-      .select("created_at, status, priority")
+      .select("id, heading, elaboration, created_at, priority, user_rating, system_rating")
       .eq("user_id", user.id)
-      .eq("archived", false);
+      .eq("archived", false)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(0, dashboardThoughtPageSize);
 
     if (error) {
       const code = /^[A-Z0-9_-]{1,32}$/i.test(error.code) ? error.code : "UNKNOWN";
       console.error("[thoughts.overview] Supabase SELECT failed", { code });
       loadError = getThoughtReadErrorMessage(code, error.message);
     } else {
-      thoughts = data ?? [];
+      const rows = data ?? [];
+      hasMore = rows.length > dashboardThoughtPageSize;
+      recentThoughts = rows.slice(0, dashboardThoughtPageSize);
     }
   } catch (error) {
     console.error("[thoughts.overview] Unexpected SELECT failure", {
@@ -58,16 +67,11 @@ export default async function HomePage({
     loadError = "Your thoughts could not be loaded. Please try again shortly.";
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todayCount = thoughts?.filter(
-    (thought) => new Date(thought.created_at).toISOString().slice(0, 10) === today
-  ).length ?? null;
-
   return (
     <DashboardOverview
       profile={getProfileIdentity(user)}
-      thoughts={thoughts}
-      todayCount={todayCount}
+      recentThoughts={recentThoughts}
+      hasMore={hasMore}
       loadError={loadError}
     />
   );

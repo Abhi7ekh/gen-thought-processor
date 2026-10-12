@@ -175,14 +175,14 @@ export function ThoughtCard({
   const detailHref = `/thoughts/${thought.id}?returnTo=${encodeURIComponent(returnTo)}`;
 
   return (
-    <article className={variant === "detail" ? "" : "border-b border-line-soft py-4 last:border-b-0"}>
+    <article className={variant === "detail" ? "rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7" : "min-w-0 rounded-2xl border border-border bg-card p-4 shadow-sm"}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             {variant === "detail" ? (
-              <h1 id={headingId} className="min-w-0 text-2xl font-semibold leading-tight text-ink-strong sm:text-3xl">
+              <h2 id={headingId} className="min-w-0 text-2xl font-semibold leading-tight text-ink-strong sm:text-3xl">
                 {thought.heading}
-              </h1>
+              </h2>
             ) : (
               <h3 id={headingId} className="min-w-0 text-sm font-semibold leading-5 text-ink-strong">
                 <Link

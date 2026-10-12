@@ -57,15 +57,15 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#f8fafc,#f1f5f9_35%,#e2e8f0)] px-4 py-12">
-      <div className="w-full max-w-md rounded-[28px] border border-zinc-200 bg-white/90 p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-8">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <div className="w-full max-w-md rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_55px_rgba(67,50,124,0.1)] sm:p-8">
         <div className="mb-7 space-y-3">
-          <div className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-600">
+          <div className="inline-flex items-center rounded-full border border-border bg-accent px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-muted">
             Gen Thought Processor
           </div>
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Set a new password</h1>
-            <p className="mt-2 text-sm text-zinc-600">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Set a new password</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
               Choose a strong password to finish resetting your account.
             </p>
           </div>
@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-zinc-700">
+            <label htmlFor="password" className="text-sm font-medium text-secondary-foreground">
               New password
             </label>
             <input
@@ -85,12 +85,12 @@ export default function ResetPasswordPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Create a strong password"
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-base text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200"
+              className="w-full rounded-xl border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none transition focus:border-ring focus:ring-4 focus:ring-ring/20"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="confirmPassword" className="text-sm font-medium text-zinc-700">
+            <label htmlFor="confirmPassword" className="text-sm font-medium text-secondary-foreground">
               Confirm password
             </label>
             <input
@@ -102,18 +102,18 @@ export default function ResetPasswordPage() {
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="Re-enter your password"
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-base text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200"
+              className="w-full rounded-xl border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none transition focus:border-ring focus:ring-4 focus:ring-ring/20"
             />
           </div>
 
           {error ? (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="rounded-xl border border-danger-border bg-danger-surface px-3 py-2 text-sm text-danger-foreground">
               {error}
             </p>
           ) : null}
 
           {message ? (
-            <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <p className="rounded-xl border border-[#D9ECDD] bg-[#F0FAF2] px-3 py-2 text-sm text-[#32613D] dark:border-[#385441] dark:bg-[#223329] dark:text-[#B5E0BE]">
               {message}
             </p>
           ) : null}
@@ -121,14 +121,14 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Updating password..." : "Update password"}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-zinc-600">
-          <Link href="/login" className="font-medium text-zinc-900 underline-offset-4 hover:underline">
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          <Link href="/login" className="font-medium text-brand-muted underline-offset-4 hover:underline">
             Back to login
           </Link>
         </div>

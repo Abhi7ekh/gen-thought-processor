@@ -5,6 +5,8 @@ import { z } from "zod";
 
 import { evaluateThoughtLocally } from "@/features/thoughts/evaluate-thought-locally";
 import { systemEvaluationSchema } from "@/features/thoughts/system-evaluation-schema";
+import type { DashboardThoughtPreview } from "@/features/thoughts/thought-types";
+import { THOUGHTS_PAGE_SIZE } from "@/features/thoughts/thought-query";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   thoughtContentSchema,
@@ -95,6 +97,61 @@ function getRatingFailureMessage(error: { code?: string; message?: string; statu
   return "Your rating could not be saved. Please try again.";
 }
 
+const dashboardOffsetSchema = z.number().int().min(0).max(100_000);
+export async function loadMoreDashboardThoughts(offset: number) {
+  const parsedOffset = dashboardOffsetSchema.safeParse(offset);
+  if (!parsedOffset.success) {
+    return { ok: false as const, message: "Older thoughts could not be loaded. Refresh and try again." };
+  }
+
+  try {
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+      error: sessionError,
+    } = await supabase.auth.getUser();
+
+    if (sessionError || !user) {
+      if (sessionError) {
+        console.error(
+          "[thoughts.dashboard-page] Authentication check failed",
+          safeSupabaseDiagnostic(sessionError)
+        );
+      }
+      return { ok: false as const, message: "Your session could not be verified. Sign in and try again." };
+    }
+
+    const { data, error } = await supabase
+      .from("thoughts")
+      .select("id, heading, elaboration, created_at, priority, user_rating, system_rating")
+      .eq("user_id", user.id)
+      .eq("archived", false)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(parsedOffset.data, parsedOffset.data + THOUGHTS_PAGE_SIZE);
+
+    if (error) {
+      console.error(
+        "[thoughts.dashboard-page] Supabase SELECT failed",
+        safeSupabaseDiagnostic(error)
+      );
+      return { ok: false as const, message: "Older thoughts could not be loaded. Please try again." };
+    }
+
+    const rows = (data ?? []) as DashboardThoughtPreview[];
+    return {
+      ok: true as const,
+      thoughts: rows.slice(0, THOUGHTS_PAGE_SIZE),
+      hasMore: rows.length > THOUGHTS_PAGE_SIZE,
+    };
+  } catch (error) {
+    console.error("[thoughts.dashboard-page] Unexpected SELECT failure", {
+      name: error instanceof Error ? error.name : "UnknownError",
+    });
+    return { ok: false as const, message: "Older thoughts could not be loaded. Please try again." };
+  }
+}
+
 export async function saveThought(formData: FormData) {
   const parsed = thoughtContentSchema.safeParse({
     heading: formData.get("heading"),
@@ -131,11 +188,15 @@ export async function saveThought(formData: FormData) {
       };
     }
 
-    const { error } = await supabase.from("thoughts").insert({
-      user_id: user.id,
-      heading: parsed.data.heading,
-      elaboration: parsed.data.elaboration,
-    });
+    const { data: thought, error } = await supabase
+      .from("thoughts")
+      .insert({
+        user_id: user.id,
+        heading: parsed.data.heading,
+        elaboration: parsed.data.elaboration,
+      })
+      .select("id, heading, elaboration, created_at, priority, user_rating, system_rating")
+      .single();
 
     if (error) {
       const diagnostic = safeSupabaseDiagnostic(error);
@@ -151,15 +212,15 @@ export async function saveThought(formData: FormData) {
       };
     }
 
-    try {
-      revalidatePath("/");
-    } catch (error) {
-      console.error("[thoughts.save] Dashboard revalidation failed", {
-        name: error instanceof Error ? error.name : "UnknownError",
-      });
+    if (!thought) {
+      console.error("[thoughts.save] Insert returned no row");
+      return {
+        ok: false as const,
+        message: "The thought was saved but could not be displayed. Refresh and try again.",
+      };
     }
 
-    return { ok: true as const };
+    return { ok: true as const, thought };
   } catch (error) {
     console.error("[thoughts.save] Unexpected failure", {
       name: error instanceof Error ? error.name : "UnknownError",

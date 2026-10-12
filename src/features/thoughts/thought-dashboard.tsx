@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { BrainCircuit, Clock, Sun, type LucideIcon } from "lucide-react";
 
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-shell";
 import type { DashboardThought } from "@/features/thoughts/thought-types";
 import type { ThoughtDashboardQuery } from "@/features/thoughts/thought-types";
 import { ThoughtCard } from "@/features/thoughts/thought-card";
@@ -11,17 +12,23 @@ import type { ProfileIdentity } from "@/lib/profile";
 type ThoughtsWorkspaceProps = {
   profile: ProfileIdentity;
   thoughts: DashboardThought[] | null;
+  hasMore: boolean;
   loadError?: string;
   query: ThoughtDashboardQuery;
   returnTo: string;
+  previousPageHref?: string;
+  nextPageHref?: string;
 };
 
 export function ThoughtsWorkspace({
   profile,
   thoughts,
+  hasMore,
   loadError,
   query,
   returnTo,
+  previousPageHref,
+  nextPageHref,
 }: ThoughtsWorkspaceProps) {
   const today = new Date().toISOString().slice(0, 10);
   const todayThoughts =
@@ -34,45 +41,43 @@ export function ThoughtsWorkspace({
       : null;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-12">
-        <AppHeader profile={profile} />
+    <AppShell profile={profile} title="Thoughts">
+      <div>
+        <section className="pb-6">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.17em] text-brand-muted">
+            Thought workspace
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold text-foreground sm:text-4xl">
+            Thoughts
+          </h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-ink-soft sm:text-base">
+            Browse, organize, and revisit your captured thoughts.
+          </p>
+        </section>
 
-        <div className="pb-16">
-          <section className="py-9 sm:py-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.17em] text-brand-muted">
-              Thought workspace
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-foreground sm:text-4xl">
-              Thoughts
-            </h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-ink-soft sm:text-base">
-              Browse, organize, and revisit your captured thoughts.
-            </p>
-          </section>
+        {loadError ? (
+          <p
+            role="alert"
+            className="mb-6 rounded-lg border border-danger-border bg-danger-surface px-4 py-3 text-sm text-danger-foreground"
+          >
+            {loadError}
+          </p>
+        ) : null}
 
-          {loadError ? (
-            <p
-              role="alert"
-              className="mb-6 rounded-lg border border-danger-border bg-danger-surface px-4 py-3 text-sm text-danger-foreground"
-            >
-              {loadError}
-            </p>
-          ) : null}
-
-          <Suspense fallback={<ThoughtToolbarFallback />}>
-            <ThoughtToolbar />
-          </Suspense>
-          <ThoughtFeed
-            thoughts={thoughts}
-            todayThoughts={todayThoughts}
-            recentThoughts={recentThoughts}
-            query={query}
-            returnTo={returnTo}
-          />
-        </div>
+        <Suspense fallback={<ThoughtToolbarFallback />}>
+          <ThoughtToolbar />
+        </Suspense>
+        <ThoughtFeed
+          thoughts={thoughts}
+          todayThoughts={todayThoughts}
+          recentThoughts={recentThoughts}
+          query={query}
+          returnTo={returnTo}
+          previousPageHref={previousPageHref}
+          nextPageHref={nextPageHref}
+        />
       </div>
-    </main>
+    </AppShell>
   );
 }
 function ThoughtToolbarFallback() {
@@ -90,12 +95,16 @@ function ThoughtFeed({
   recentThoughts,
   query,
   returnTo,
+  previousPageHref,
+  nextPageHref,
 }: {
   thoughts: DashboardThought[] | null;
   todayThoughts: DashboardThought[] | null;
   recentThoughts: DashboardThought[] | null;
   query: ThoughtDashboardQuery;
   returnTo: string;
+  previousPageHref?: string;
+  nextPageHref?: string;
 }) {
   const noResultsMessage = getNoResultsMessage(query);
 
@@ -159,6 +168,15 @@ function ThoughtFeed({
           />
         </div>
       )}
+      <nav aria-label="Thought pages" className="mt-6 flex items-center justify-between border-t border-border pt-4">
+        {previousPageHref ? (
+          <Link href={previousPageHref} rel="prev" className="text-sm font-medium text-secondary-foreground hover:underline">Previous</Link>
+        ) : <span />}
+        <span className="text-xs text-ink-muted">Page {query.page}</span>
+        {nextPageHref ? (
+          <Link href={nextPageHref} rel="next" className="text-sm font-medium text-secondary-foreground hover:underline">Next</Link>
+        ) : <span />}
+      </nav>
     </section>
   );
 }
@@ -193,7 +211,7 @@ function ThoughtFeedSection({
   returnTo,
 }: ThoughtFeedSectionProps) {
   return (
-    <section aria-label={`${title} thoughts`} className="min-w-0 border-t border-border pt-4">
+    <section aria-label={`${title} thoughts`} className="min-w-0">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-ink-strong">{title}</h3>
@@ -217,7 +235,7 @@ function ThoughtFeedSection({
           </p>
         </div>
       ) : (
-        <div className="mt-3">
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
           {thoughts.map((thought) => (
             <ThoughtCard key={thought.id} thought={thought} returnTo={returnTo} />
           ))}
@@ -226,4 +244,3 @@ function ThoughtFeedSection({
     </section>
   );
 }
-

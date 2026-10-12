@@ -114,6 +114,7 @@ export function ThoughtToolbar() {
     }
 
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
     if (preserveSearchDraft) {
       const draft = searchInputRef.current?.value.trim() ?? "";
       if (draft) params.set("search", draft);

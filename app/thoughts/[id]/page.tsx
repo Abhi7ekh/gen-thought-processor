@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-shell";
 import { requireUserSession } from "@/lib/auth";
 import { ThoughtCard } from "@/features/thoughts/thought-card";
 import type { DashboardThought } from "@/features/thoughts/thought-types";
@@ -70,10 +70,8 @@ export default async function ThoughtDetailPage({
   if (!thought && !loadError) notFound();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-12">
-        <AppHeader profile={getProfileIdentity(user)} />
-        <div className="mx-auto max-w-4xl pb-16 pt-6 sm:pt-10">
+    <AppShell profile={getProfileIdentity(user)} title="Thought detail">
+        <div className="mx-auto max-w-4xl">
           <Link
             href={returnTo}
             className="inline-flex min-h-10 items-center gap-2 rounded-md text-sm font-medium text-ink-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -92,7 +90,6 @@ export default async function ThoughtDetailPage({
             </div>
           ) : null}
         </div>
-      </div>
-    </main>
+    </AppShell>
   );
 }

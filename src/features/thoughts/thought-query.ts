@@ -3,7 +3,10 @@ import { z } from "zod";
 import type { ThoughtDashboardQuery } from "@/features/thoughts/thought-types";
 import { thoughtStatusSchema } from "@/lib/validations/thought";
 
+export const THOUGHTS_PAGE_SIZE = 30;
+
 export const thoughtDashboardQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(10_000).catch(1),
   search: z.string().trim().max(160).catch(""),
   status: z.union([z.literal("all"), thoughtStatusSchema]).catch("all"),
   priority: z.enum(["all", "set", "none"]).catch("all"),
@@ -19,6 +22,7 @@ export function firstSearchParam(value: string | string[] | undefined) {
 
 export function getThoughtsReturnTo(query: ThoughtDashboardQuery) {
   const params = new URLSearchParams();
+  if (query.page > 1) params.set("page", String(query.page));
   if (query.search) params.set("search", query.search);
   if (query.status !== "all") params.set("status", query.status);
   if (query.priority !== "all") params.set("priority", query.priority);

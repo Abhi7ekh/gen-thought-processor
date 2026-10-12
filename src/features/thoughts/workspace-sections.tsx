@@ -38,13 +38,20 @@ export function DailySummarySection({
           {summary.totalThoughts === 0 ? (
             <p className="mb-3 text-xs text-ink-muted">No thoughts created today.</p>
           ) : null}
-          <div className="grid grid-cols-2 border-y border-border sm:grid-cols-3 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             {metrics.map((metric, index) => (
               <div
                 key={metric.label}
-                className={`py-3 ${index % 2 === 1 ? "pl-4" : "pr-4"} ${
-                  index > 1 ? "border-t border-line-subtle sm:border-t-0" : ""
-                } ${index > 0 ? "sm:border-l sm:border-line-subtle sm:pl-4" : ""}`}
+                className={`rounded-2xl border border-border p-4 shadow-sm ${
+                  [
+                    "bg-[#F0E9FF] dark:bg-[#342D4A]",
+                    "bg-[#FFE8EF] dark:bg-[#422B3C]",
+                    "bg-[#FFF2D6] dark:bg-[#493C25]",
+                    "bg-[#E8F0FF] dark:bg-[#29374F]",
+                    "bg-accent/50",
+                    "bg-card",
+                  ][index]
+                }`}
               >
                 <p className="text-[11px] font-medium text-ink-muted">{metric.label}</p>
                 <p className="mt-1 text-xl font-semibold tabular-nums text-ink-strong">
@@ -53,7 +60,7 @@ export function DailySummarySection({
               </div>
             ))}
           </div>
-          <div className="mt-3 flex flex-col gap-2 text-xs text-ink-muted sm:flex-row sm:gap-6">
+          <div className="mt-4 grid gap-3 rounded-2xl border border-border bg-card p-4 text-xs text-ink-muted sm:grid-cols-2">
             <span>
               Average user rating: <strong className="font-semibold text-ink-body">{summary.averageUserRating ?? "—"}</strong>
             </span>
@@ -116,7 +123,7 @@ export function RevisitSection({
           No older thoughts need a revisit right now.
         </div>
       ) : (
-        <div className="border-t border-border">
+        <div className="grid gap-3 md:grid-cols-2">
           {thoughts.map((thought) => (
             <ThoughtCard
               key={thought.id}

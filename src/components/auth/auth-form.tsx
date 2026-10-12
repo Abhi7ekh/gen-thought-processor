@@ -189,7 +189,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-5">
       <div className="space-y-2">
-        <label htmlFor="email" className="text-sm font-medium text-zinc-700">
+        <label htmlFor="email" className="text-sm font-medium text-secondary-foreground">
           Email
         </label>
         <input
@@ -201,12 +201,12 @@ export function AuthForm({ mode }: AuthFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-base text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200"
+          className="w-full rounded-xl border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none transition focus:border-ring focus:ring-4 focus:ring-ring/20"
         />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium text-zinc-700">
+        <label htmlFor="password" className="text-sm font-medium text-secondary-foreground">
           Password
         </label>
         <input
@@ -218,13 +218,13 @@ export function AuthForm({ mode }: AuthFormProps) {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder={isLogin ? "Enter your password" : "Create a strong password"}
-          className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-base text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200"
+          className="w-full rounded-xl border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none transition focus:border-ring focus:ring-4 focus:ring-ring/20"
         />
       </div>
 
       {!isLogin ? (
         <div className="space-y-2">
-          <label htmlFor="confirmPassword" className="text-sm font-medium text-zinc-700">
+          <label htmlFor="confirmPassword" className="text-sm font-medium text-secondary-foreground">
             Confirm password
           </label>
           <input
@@ -236,19 +236,19 @@ export function AuthForm({ mode }: AuthFormProps) {
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             placeholder="Re-enter your password"
-            className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-base text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-200"
+            className="w-full rounded-xl border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none transition focus:border-ring focus:ring-4 focus:ring-ring/20"
           />
         </div>
       ) : null}
 
       {error ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-xl border border-danger-border bg-danger-surface px-3 py-2 text-sm text-danger-foreground">
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <p className="rounded-xl border border-[#D9ECDD] bg-[#F0FAF2] px-3 py-2 text-sm text-[#32613D] dark:border-[#385441] dark:bg-[#223329] dark:text-[#B5E0BE]">
           {message}
         </p>
       ) : null}
@@ -256,7 +256,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       <button
         type="submit"
         disabled={isSubmitting || isGoogleSubmitting}
-        className="inline-flex w-full items-center justify-center rounded-xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSubmitting
           ? isLogin
@@ -267,10 +267,10 @@ export function AuthForm({ mode }: AuthFormProps) {
             : "Create account"}
       </button>
 
-      <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
-        <div className="h-px flex-1 bg-zinc-200" />
+      <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="h-px flex-1 bg-border" />
         <span>Or</span>
-        <div className="h-px flex-1 bg-zinc-200" />
+        <div className="h-px flex-1 bg-border" />
       </div>
 
       <button
@@ -278,7 +278,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         onClick={handleGoogleSignIn}
         disabled={isSubmitting || isGoogleSubmitting}
         aria-label="Continue with Google"
-        className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:focus-visible:ring-zinc-700"
+        className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-secondary-foreground shadow-sm transition hover:bg-accent focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <Globe className="h-4 w-4" aria-hidden="true" />
         <span>{isGoogleSubmitting ? "Continuing with Google..." : "Continue with Google"}</span>
@@ -289,7 +289,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           type="button"
           onClick={handleResendConfirmation}
           disabled={isResending}
-          className="inline-flex w-full items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-secondary-foreground transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isResending ? "Sending confirmation..." : "Resend confirmation email"}
         </button>

@@ -9,6 +9,7 @@ import {
   getSearchPhrase,
   getThoughtReadErrorMessage,
   getThoughtsReturnTo,
+  THOUGHTS_PAGE_SIZE,
   thoughtDashboardQuerySchema,
 } from "@/features/thoughts/thought-query";
 
@@ -18,6 +19,7 @@ export default async function ThoughtsPage({
   const user = await requireUserSession();
   const rawParams = await searchParams;
   const query = thoughtDashboardQuerySchema.parse({
+    page: firstSearchParam(rawParams.page),
     search: firstSearchParam(rawParams.search),
     status: firstSearchParam(rawParams.status),
     priority: firstSearchParam(rawParams.priority),
@@ -28,6 +30,7 @@ export default async function ThoughtsPage({
   }) satisfies ThoughtDashboardQuery;
 
   let thoughts: DashboardThought[] | null = null;
+  let hasMore = false;
   let loadError: string | undefined;
 
   try {
@@ -55,13 +58,16 @@ export default async function ThoughtsPage({
       );
     }
 
-    const result = await applyThoughtSort(request, query.sort);
+    const offset = (query.page - 1) * THOUGHTS_PAGE_SIZE;
+    const result = await applyThoughtSort(request, query.sort).range(offset, offset + THOUGHTS_PAGE_SIZE);
     if (result.error) {
       const code = /^[A-Z0-9_-]{1,32}$/i.test(result.error.code) ? result.error.code : "UNKNOWN";
       console.error("[thoughts.index] Supabase SELECT failed", { code });
       loadError = getThoughtReadErrorMessage(code, result.error.message);
     } else {
-      thoughts = result.data ?? [];
+      const rows = result.data ?? [];
+      hasMore = rows.length > THOUGHTS_PAGE_SIZE;
+      thoughts = rows.slice(0, THOUGHTS_PAGE_SIZE);
     }
   } catch (error) {
     console.error("[thoughts.index] Unexpected SELECT failure", {
@@ -74,9 +80,12 @@ export default async function ThoughtsPage({
     <ThoughtsWorkspace
       profile={getProfileIdentity(user)}
       thoughts={thoughts}
+      hasMore={hasMore}
       loadError={loadError}
       query={query}
       returnTo={getThoughtsReturnTo(query)}
+      previousPageHref={query.page > 1 ? getThoughtsReturnTo({ ...query, page: query.page - 1 }) : undefined}
+      nextPageHref={hasMore ? getThoughtsReturnTo({ ...query, page: query.page + 1 }) : undefined}
     />
   );
 }

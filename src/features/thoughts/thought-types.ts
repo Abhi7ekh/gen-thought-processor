@@ -15,7 +15,13 @@ export type DashboardThought = Pick<
   | "system_rating_details"
 >;
 
+export type DashboardThoughtPreview = Pick<
+  DashboardThought,
+  "id" | "heading" | "elaboration" | "created_at" | "priority" | "user_rating" | "system_rating"
+>;
+
 export type ThoughtDashboardQuery = {
+  page: number;
   search: string;
   status: "all" | DashboardThought["status"];
   priority: "all" | "set" | "none";

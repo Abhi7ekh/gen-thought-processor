@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-shell";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { requireUserSession } from "@/lib/auth";
 import { getProfileIdentity } from "@/lib/profile";
@@ -16,16 +16,13 @@ export default async function ProfilePage() {
     : "Unavailable";
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-12">
-        <AppHeader profile={profile} />
-
-        <div className="mx-auto max-w-3xl pb-16">
+    <AppShell profile={profile} title="Profile">
+      <div className="mx-auto max-w-3xl">
           <section className="border-b border-border py-9 sm:py-12">
             <p className="text-[11px] font-semibold uppercase tracking-[0.17em] text-brand-muted">
               Account
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-foreground">Profile</h1>
+            <h2 className="mt-2 text-3xl font-semibold text-foreground">Profile</h2>
             <p className="mt-2 text-sm leading-6 text-ink-soft">
               Manage your account information.
             </p>
@@ -64,8 +61,7 @@ export default async function ProfilePage() {
               </div>
             </dl>
           </section>
-        </div>
       </div>
-    </main>
+    </AppShell>
   );
 }

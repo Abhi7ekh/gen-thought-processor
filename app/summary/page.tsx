@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-shell";
 import { DailySummarySection } from "@/features/thoughts/workspace-sections";
 import { createDailySummary } from "@/features/thoughts/daily-summary";
 import type { DailySummary, DailySummaryThought } from "@/features/thoughts/thought-types";
@@ -40,14 +40,10 @@ export default async function SummaryPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-12">
-        <AppHeader profile={getProfileIdentity(user)} />
-        <div className="mx-auto max-w-5xl pb-16">
-          <h1 className="sr-only">Daily Summary</h1>
-          <DailySummarySection summary={summary} error={error} />
-        </div>
+    <AppShell profile={getProfileIdentity(user)} title="Daily Summary">
+      <div className="mx-auto max-w-5xl">
+        <DailySummarySection summary={summary} error={error} />
       </div>
-    </main>
+    </AppShell>
   );
 }

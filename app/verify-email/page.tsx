@@ -7,7 +7,7 @@ export default async function VerifyEmailPage({
   const email = typeof params.email === "string" ? params.email : "";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#f8fafc,#f1f5f9_35%,#e2e8f0)] px-4 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <VerifyEmailCard email={email} />
     </main>
   );

@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-shell";
 import type { DashboardThought } from "@/features/thoughts/thought-types";
 import { RevisitSection } from "@/features/thoughts/workspace-sections";
 import { requireUserSession } from "@/lib/auth";
@@ -45,14 +45,10 @@ export default async function RevisitPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-360 px-5 sm:px-8 lg:px-12">
-        <AppHeader profile={getProfileIdentity(user)} />
-        <div className="mx-auto max-w-5xl pb-16">
-          <h1 className="sr-only">Revisit</h1>
-          <RevisitSection thoughts={thoughts} error={error} returnTo="/revisit" />
-        </div>
+    <AppShell profile={getProfileIdentity(user)} title="Revisit">
+      <div className="mx-auto max-w-5xl">
+        <RevisitSection thoughts={thoughts} error={error} returnTo="/revisit" />
       </div>
-    </main>
+    </AppShell>
   );
 }
